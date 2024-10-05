@@ -1,4 +1,10 @@
 ﻿{
+	"ContactInfo": {
+		"firstName": "YourFirstName",
+		"lastName": "YourLastName",
+		"email": "your.email@example.com",
+		"phone": "123-456-7890"
+	},
 	"TargetingWebsites": [
 		{
 			"site": "JobsCz",
