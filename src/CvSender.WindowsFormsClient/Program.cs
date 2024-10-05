@@ -1,16 +1,12 @@
+using CvSender.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Windows.Forms.Design;
-using CvSender.Core;
 
 namespace CvSender.WindowsFormsClient
 {
         internal static class Program
         {
-                /// <summary>
-                ///  The main entry point for the application.
-                /// </summary>
-                ///
                 [STAThread]
                 static void Main()
                 {
@@ -18,58 +14,49 @@ namespace CvSender.WindowsFormsClient
                         //Application.EnableVisualStyles();
                         //Application.SetCompatibleTextRenderingDefault(false);
 
-                        //var host = CreateHostBuilder().Build();
-                        //ServiceProvider = host.Services;
+                        //var serviceCollection = new ServiceCollection();
+                        //ConfigureServices(serviceCollection);
 
-                        //Application.Run(ServiceProvider.GetRequiredService<Form1>());
-                        //////////////ApplicationConfiguration.Initialize();
+                        //IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-                        //////////////Application.SetCompatibleTextRenderingDefault(false);
-
-                        //////////////var host = CreateHostBuilder().Build();
-
-                        //////////////var fromStartService = host.Services.GetRequiredService<Form1>();
-
-                        //////////////Application.Run(fromStartService);
-
-                        //// To customize application configuration such as set high DPI settings or default font,
-                        //// see https://aka.ms/applicationconfiguration.
-                        //ApplicationConfiguration.Initialize();
-                        //Application.Run(new Form1());
-
-                        //var host = CreateHostBuilder().Build();
-                        //ServiceProvider = host.Services;
-
-                        //Application.Run(ServiceProvider.GetRequiredService<Form1>());
-
+                        //Application.Run(serviceProvider.GetRequiredService<MainForm>());
                         Application.SetHighDpiMode(HighDpiMode.SystemAware);
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
 
-                        var serviceCollection = new ServiceCollection();
-                        ConfigureServices(serviceCollection);
+                        // Create the host builder
+                        var host = CreateHostBuilder().Build();
 
-                        IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
-
-                        Application.Run(serviceProvider.GetRequiredService<Form1>());
+                        // Run the main form with dependency injection
+                        Application.Run(host.Services.GetRequiredService<MainForm>());
                 }
 
-                //static IHostBuilder CreateHostBuilder()
+                //private static void ConfigureServices(ServiceCollection services)
                 //{
-                //        return Host.CreateDefaultBuilder()
-                //                .ConfigureServices((context, services) => {
-                //                        services.AddSingleton<Form1>();
-                //                });
+                //        services.AddCore();
+
+                //        services.AddTransient<MainForm>();
                 //}
-                private static void ConfigureServices(ServiceCollection services)
+                private static IHostBuilder CreateHostBuilder()
                 {
-                        services.AddCore();
+                        return Host.CreateDefaultBuilder()
+                                .ConfigureAppConfiguration((context, config) =>
+                                {
+                                        // Add appsettings.json configuration
+                                        config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                                })
+                                .ConfigureServices((context, services) =>
+                                {
+                                        // Configure services here
+                                        services.AddCore(); // Assuming this is your custom DI setup
 
-                        // Register your services here
-                        // Register your forms
-                        services.AddTransient<Form1>();
+                                        // Inject configuration settings if needed
+                                        IConfiguration configuration = context.Configuration;
+                                        services.AddSingleton(configuration);
+
+                                        // Register the MainForm
+                                        services.AddTransient<MainForm>();
+                                });
                 }
-
-
         }
 }

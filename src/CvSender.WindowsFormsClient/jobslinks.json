@@ -1,0 +1,19 @@
+﻿{
+	"TargetingWebsites": [
+		{
+			"site": "JobsCz",
+			"name": "Jobs.cz - С# Developer",
+			"url": "https://www.jobs.cz/prace/praha/programator/?q%5B%5D=%D0%A1%23"
+		},
+		{
+			"site": "JobsCz",
+			"name": "Jobs.cz - .NET Opportunities",
+			"url": "https://www.jobs.cz/prace/praha/?q%5B%5D=.net"
+		},
+		{
+			"site": "JobsContact",
+			"name": "JobsContact - C# Opportunities",
+			"url": "https://www.jobscontact.cz/prace/praha?jobFilterFulltext%5B0%5D=C%23"
+		}
+	]
+}

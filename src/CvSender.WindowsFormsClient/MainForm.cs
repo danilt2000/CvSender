@@ -1,10 +1,11 @@
 using CvSender.Core.ApplicationServices;
 using CvSender.Core.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CvSender.WindowsFormsClient
 {
-        public partial class Form1 : Form
+        public partial class MainForm : Form
         {
                 //https://www.jobscontact.cz/prace/praha?jobFilterFulltext%5B0%5D=C%23
 
@@ -20,7 +21,7 @@ namespace CvSender.WindowsFormsClient
 
                 private readonly IList<ICVManager> _cvManagers;
 
-                public Form1([FromKeyedServices(JobsCzCvSender.ServiceKey)] ICVManager _jobsCzCvSender)
+                public MainForm([FromKeyedServices(JobsCzCvSender.ServiceKey)] ICVManager _jobsCzCvSender, IConfiguration config)
                 {
                         InitializeComponent();
 
