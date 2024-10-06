@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CvSender.Core\CvSender.Core.csproj" />
+    <ProjectReference Include="..\CvSender.Persistent.MongoDb\CvSender.Persistent.MongoDb.csproj" />
   </ItemGroup>
 
   <ItemGroup>

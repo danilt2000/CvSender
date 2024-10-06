@@ -1,4 +1,5 @@
-﻿using CvSender.Core.Interfaces;
+﻿using System.Reflection.Metadata.Ecma335;
+using CvSender.Core.Interfaces;
 using CvSender.Core.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
@@ -11,22 +12,16 @@ namespace CvSender.Core.ApplicationServices
 
                 private readonly IWebDriver _driver;
 
-                public JobsCzCvSender(IWebDriver driver)
+                private readonly IRepository<IAppliedPosition> _repositoryAppliedPosition;
+
+                public JobsCzCvSender(IWebDriver driver, IRepository<IAppliedPosition> repositoryAppliedPosition)
                 {
-                        //ChromeOptions options = new ChromeOptions();
-
-                        ////options.AddArgument(@"user-data-dir=C:\Users\PUTYOURWINDOWSUSERNAME\AppData\Local\Google\Chrome\User Data");
-                        //options.AddArgument("userChromeDataLocalPath");
-                        ////options.AddArgument(@"user-data-dir=C:\Users\Danil\AppData\Local\Google\Chrome\User Data");
-
-                        //options.AddArgument("--no-sandbox");
-
-                        //options.AddArgument("--disable-dev-shm-usage");
                         _driver = driver;
-                        //_driver = new ChromeDriver(options);
+
+                        _repositoryAppliedPosition = repositoryAppliedPosition;
                 }
 
-                public void SendCvToUnappliedPositions(string link, UserInfo userInfo)
+                public async void SendCvToUnappliedPositions(string link, UserInfo userInfo)
                 {
                         _driver.Navigate().GoToUrl(link);
 
@@ -34,25 +29,75 @@ namespace CvSender.Core.ApplicationServices
 
                         wait.Until(d => d.FindElements(By.CssSelector(".SearchResultCard__titleLink")).Count > 0);
 
-                        var jobLinks = _driver.FindElements(By.CssSelector(".SearchResultCard__titleLink"));
+                        var jobLinks = _driver.FindElements(By.CssSelector(".SearchResultCard__titleLink")).ToList();
 
-                        foreach (var jobLink in jobLinks)
+                        var firstLink = link;
+
+                        var webHost = new Uri(link).Host;
+
+                        var alreadyAppliedJobs = new List<IWebElement>();
+
+                        for (int i = 0; i < jobLinks.Count - 1; i++)
                         {
                                 try
                                 {
-                                        var jobCard = jobLink.FindElement(By.XPath("ancestor::article"));
+                                        if (alreadyAppliedJobs.Contains(jobLinks[i]))
+                                                continue;
+
+                                        var jobCard = jobLinks[i].FindElement(By.XPath("ancestor::article"));
 
                                         var companyNameElement = jobCard.FindElement(By.CssSelector(".SearchResultCard__footerItem span"));
 
                                         string companyName = companyNameElement.Text;
-                                        
-                                        var position = jobLink.Text;
 
-                                        jobLink.Click();
+                                        var position = jobLinks[i].Text;
+
+                                        if (await IsPositionAlreadyApplied(companyName, position))
+                                        {
+                                                alreadyAppliedJobs.Add(jobLinks[i]);
+
+                                                jobLinks = _driver
+                                                        .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
+                                                        .ToList();
+
+                                                continue;
+                                        }
+
+                                        jobLinks[i].Click();
+
+                                        string currentHost = new Uri(_driver.Url).Host;
+
+                                        if (webHost != currentHost)
+                                        {
+                                                _driver.Navigate().GoToUrl(link);
+
+                                                alreadyAppliedJobs.Add(jobLinks[i]);
+
+                                                jobLinks = _driver
+                                                        .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
+                                                        .ToList();
+
+                                                continue;
+                                        }
 
                                         var applyButton = _driver.FindElement(By.CssSelector(".Button.Button--primary.Button--large.d-none.d-tablet-inline-flex.mr-tablet-700"));
 
                                         applyButton.Click();
+
+                                        var currentUrl = new Uri(_driver.Url).AbsoluteUri;
+
+                                        if (currentUrl.StartsWith("https://www.jobs.cz/asmt"))
+                                        {
+                                                _driver.Navigate().GoToUrl(link);
+
+                                                alreadyAppliedJobs.Add(jobLinks[i]);
+
+                                                jobLinks = _driver
+                                                        .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
+                                                        .ToList();
+
+                                                continue;
+                                        }
 
                                         var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DanilTkachenkoCv.pdf");
 
@@ -92,12 +137,41 @@ namespace CvSender.Core.ApplicationServices
                                         var submitButton = _driver.FindElement(By.CssSelector("Button.Button--primary.Button--large"));
 
                                         submitButton.Click();
+
+                                        AddAppliedPositionToRepository(companyName, position);
+
+                                        _driver.Navigate().GoToUrl(link);
+
+                                        alreadyAppliedJobs.Add(jobLinks[i]);
+
+                                        jobLinks = _driver
+                                                .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
+                                                .ToList();
                                 }
                                 catch (Exception ex)
                                 {
                                         Console.WriteLine($"Произошла ошибка при обработке позиции: {ex.Message}");
                                 }
                         }
+                }
+
+                private async void AddAppliedPositionToRepository(string companyName, string position)
+                {
+                        //await _repositoryAppliedPosition.AddAsync(new CoreAppliedPosition() { Company = companyName, Position = position, CreatedUtc = DateTime.UtcNow });
+                }
+
+                private async Task<bool> IsPositionAlreadyApplied(string companyName, string position)
+                {
+                        return false;
+
+                        //var positions = await _repositoryAppliedPosition.GetAllAsync();
+
+                        //var tempPosition = positions.FirstOrDefault(x => x.Company == companyName && x.Position == position);
+
+                        //if (tempPosition == null)
+                        //        return false;
+
+                        //return true;
                 }
         }
 }

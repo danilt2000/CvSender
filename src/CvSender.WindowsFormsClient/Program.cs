@@ -1,4 +1,5 @@
 using CvSender.Core;
+using CvSender.Persistent.MongoDb;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,6 +30,8 @@ namespace CvSender.WindowsFormsClient
                                 .ConfigureServices((context, services) =>
                                 {
                                         services.AddCore();
+                                        
+                                        services.AddPersistentMongoDb();
 
                                         IConfiguration configuration = context.Configuration;
                                         services.AddSingleton(configuration);
