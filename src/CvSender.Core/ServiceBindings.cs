@@ -20,7 +20,7 @@ namespace CvSender.Core
                 {
                         var options = new ChromeOptions();
 
-                        //options.AddArgument("user-data-dir=C:\\Users\\Danil\\AppData\\Local\\Google\\Chrome\\User Data");
+                        options.AddArgument("user-data-dir=C:\\Users\\Danil\\AppData\\Local\\Google\\Chrome\\User Data");
 
                         options.AddArgument("--no-sandbox");
                         

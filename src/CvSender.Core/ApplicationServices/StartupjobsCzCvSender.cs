@@ -5,7 +5,7 @@ namespace CvSender.Core.ApplicationServices
 {
         internal class StartupjobsCzCvSender : ICVManager
         {
-                public void SendCv(string link, UserInfo userInfo)
+                public void SendCvToUnappliedPositions(string link, UserInfo userInfo)
                 {
                         throw new NotImplementedException();
                 }

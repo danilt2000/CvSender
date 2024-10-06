@@ -4,6 +4,6 @@ namespace CvSender.Core.Interfaces
 {
         public interface ICVManager
         {
-                public void SendCv(string link, UserInfo userInfo);
+                public void SendCvToUnappliedPositions(string link, UserInfo userInfo);
         }
 }

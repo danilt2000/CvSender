@@ -56,7 +56,7 @@ namespace CvSender.WindowsFormsClient
                 {
                         foreach (var cvManager in _cvManagers)
                         {
-                                cvManager.SendCv("https://www.jobs.cz/prace/praha/programator/?q%5B%5D=%D0%A1%23",
+                                cvManager.SendCvToUnappliedPositions("https://www.jobs.cz/prace/praha/programator/?q%5B%5D=%D0%A1%23",
                                         new UserInfo() { Email = "loker2356@outlook.com", Name = "Danil", Surname = "Tkachenko", Telephone = "+420605190161" });
                         }
                 }
