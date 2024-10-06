@@ -30,10 +30,11 @@ namespace CvSender.WindowsFormsClient
                                 .ConfigureServices((context, services) =>
                                 {
                                         services.AddCore();
-                                        
-                                        services.AddPersistentMongoDb();
 
                                         IConfiguration configuration = context.Configuration;
+
+                                        services.AddPersistentMongoDb(configuration);
+
                                         services.AddSingleton(configuration);
 
                                         services.AddTransient<MainForm>();

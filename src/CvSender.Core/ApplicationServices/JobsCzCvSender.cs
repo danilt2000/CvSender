@@ -31,11 +31,18 @@ namespace CvSender.Core.ApplicationServices
 
                         var jobLinks = _driver.FindElements(By.CssSelector(".SearchResultCard__titleLink")).ToList();
 
-                        var firstLink = link;
+                        var nextButton = _driver.FindElements(By.CssSelector(".Pagination__button--next")).FirstOrDefault();
+
+                        nextButton?.Click();
+                        
+                        await SetAllFieldsAndSendCv(jobLinks, userInfo, link);
+                }
+
+                private async Task SetAllFieldsAndSendCv(List<IWebElement> jobLinks, UserInfo userInfo, string link)
+                {
+                        List<IWebElement> alreadyAppliedJobs = new List<IWebElement>();
 
                         var webHost = new Uri(link).Host;
-
-                        var alreadyAppliedJobs = new List<IWebElement>();
 
                         for (int i = 0; i < jobLinks.Count - 1; i++)
                         {
