@@ -1,4 +1,5 @@
 ﻿using CvSender.Core.Interfaces;
+using CvSender.Persistent.MongoDb.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -10,14 +11,20 @@ namespace CvSender.Persistent.MongoDb.Repository
 
                 public MongoDBService(string connectionString, string databaseName, string collectionName)
                 {
-                        var client = new MongoClient(connectionString);
-                        var database = client.GetDatabase(databaseName);
-                        _collection = database.GetCollection<T>(collectionName);
+                        //var client = new MongoClient(connectionString);
+                        //var database = client.GetDatabase(databaseName);
+                        //_collection = database.GetCollection<T>(collectionName);
+                        var client = new MongoClient("");
+                        var database = client.GetDatabase("CvSender");
+                        _collection = database.GetCollection<T>("AppliedPositions");
                 }
 
                 public async Task<List<T>> GetAllAsync()
                 {
-                        return await _collection.Find(_ => true).ToListAsync();
+                        //var entities = await _collection.Find(_ => true).ToListAsync();
+                        var entities = _collection.Find(_ => true).ToList();
+
+                        return entities;
                 }
 
                 public async Task<T> GetByIdAsync(string id)

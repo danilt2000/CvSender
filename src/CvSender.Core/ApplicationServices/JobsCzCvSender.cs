@@ -1,6 +1,8 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 using CvSender.Core.Interfaces;
 using CvSender.Core.Models;
+using CvSender.Core.Repository;
+using CvSender.Persistent.MongoDb.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 
@@ -12,13 +14,15 @@ namespace CvSender.Core.ApplicationServices
 
                 private readonly IWebDriver _driver;
 
-                private readonly IRepository<IAppliedPosition> _repositoryAppliedPosition;
+                private readonly IMongoDbService _repositoryAppliedPosition;
 
-                public JobsCzCvSender(IWebDriver driver, IRepository<IAppliedPosition> repositoryAppliedPosition)
+                public JobsCzCvSender(IWebDriver driver, IMongoDbService repositoryAppliedPosition)
                 {
                         _driver = driver;
 
                         _repositoryAppliedPosition = repositoryAppliedPosition;
+
+                        var positions = _repositoryAppliedPosition.GetAllAsync().Result;
                 }
 
                 public async void SendCvToUnappliedPositions(string link, UserInfo userInfo)
@@ -31,11 +35,25 @@ namespace CvSender.Core.ApplicationServices
 
                         var jobLinks = _driver.FindElements(By.CssSelector(".SearchResultCard__titleLink")).ToList();
 
+                        await SetAllFieldsAndSendCv(jobLinks, userInfo, link);
+
                         var nextButton = _driver.FindElements(By.CssSelector(".Pagination__button--next")).FirstOrDefault();
 
+                        while (nextButton != null)
+                        {
+                                jobLinks = _driver.FindElements(By.CssSelector(".SearchResultCard__titleLink")).ToList();
+
+                                await SetAllFieldsAndSendCv(jobLinks, userInfo, link);
+
+                                nextButton = _driver.FindElements(By.CssSelector(".Pagination__button--next"))
+                                        .FirstOrDefault();
+
+                                nextButton?.Click();
+
+                                link = _driver.Url;
+                        }
+
                         nextButton?.Click();
-                        
-                        await SetAllFieldsAndSendCv(jobLinks, userInfo, link);
                 }
 
                 private async Task SetAllFieldsAndSendCv(List<IWebElement> jobLinks, UserInfo userInfo, string link)
@@ -59,7 +77,9 @@ namespace CvSender.Core.ApplicationServices
 
                                         var position = jobLinks[i].Text;
 
-                                        if (await IsPositionAlreadyApplied(companyName, position))
+                                        var isPositionAlreadyApplied = await IsPositionAlreadyApplied(companyName, position);
+
+                                        if (isPositionAlreadyApplied)
                                         {
                                                 alreadyAppliedJobs.Add(jobLinks[i]);
 
@@ -84,6 +104,8 @@ namespace CvSender.Core.ApplicationServices
                                                         .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
                                                         .ToList();
 
+                                                //Todo add log function and send me link for eternal sites that need to be visited by user and sent Cv 
+
                                                 continue;
                                         }
 
@@ -94,6 +116,21 @@ namespace CvSender.Core.ApplicationServices
                                         var currentUrl = new Uri(_driver.Url).AbsoluteUri;
 
                                         if (currentUrl.StartsWith("https://www.jobs.cz/asmt"))
+                                        {
+                                                _driver.Navigate().GoToUrl(link);
+
+                                                alreadyAppliedJobs.Add(jobLinks[i]);
+
+                                                jobLinks = _driver
+                                                        .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
+                                                        .ToList();
+
+                                                continue;
+                                        }
+
+                                        currentUrl = new Uri(_driver.Url).AbsoluteUri;
+
+                                        if (currentUrl.StartsWith("https://www.jobs.cz/externi-jof"))
                                         {
                                                 _driver.Navigate().GoToUrl(link);
 
@@ -154,6 +191,7 @@ namespace CvSender.Core.ApplicationServices
                                         jobLinks = _driver
                                                 .FindElements(By.CssSelector(".SearchResultCard__titleLink"))
                                                 .ToList();
+
                                 }
                                 catch (Exception ex)
                                 {
@@ -164,21 +202,19 @@ namespace CvSender.Core.ApplicationServices
 
                 private async void AddAppliedPositionToRepository(string companyName, string position)
                 {
-                        //await _repositoryAppliedPosition.AddAsync(new CoreAppliedPosition() { Company = companyName, Position = position, CreatedUtc = DateTime.UtcNow });
+                        await _repositoryAppliedPosition.AddAsync(new AppliedPosition() { Company = companyName, Position = position, CreatedUtc = DateTime.UtcNow });
                 }
 
                 private async Task<bool> IsPositionAlreadyApplied(string companyName, string position)
                 {
-                        return false;
+                        var positions = await _repositoryAppliedPosition.GetAllAsync();
 
-                        //var positions = await _repositoryAppliedPosition.GetAllAsync();
+                        var tempPosition = positions.FirstOrDefault(x => x.Company == companyName && x.Position == position);
 
-                        //var tempPosition = positions.FirstOrDefault(x => x.Company == companyName && x.Position == position);
+                        if (tempPosition == null)
+                                return false;
 
-                        //if (tempPosition == null)
-                        //        return false;
-
-                        //return true;
+                        return true;
                 }
         }
 }

@@ -10,15 +10,20 @@ namespace CvSender.Persistent.MongoDb
         {
                 public static IServiceCollection AddPersistentMongoDb(this IServiceCollection serviceCollection, IConfiguration configuration)
                 {
-                        serviceCollection.AddSingleton<IRepository<IAppliedPosition>>(provider =>
-                        {
-                                var connectionString = configuration["MongoDbConnectionString"];
-                                var databaseName = "CvSender";
-                                var collectionName = "AppliedPositions";
+                        //serviceCollection.AddSingleton<IRepository<IAppliedPosition>>(provider =>
+                        //{
+                        //        var connectionString = configuration["MongoDbConnectionString"];
+                        //        var databaseName = "CvSender";
+                        //        var collectionName = "AppliedPositions";
 
-                                return new MongoDBService<IAppliedPosition>(connectionString, databaseName, collectionName);
-                        });
+                        //        return new MongoDBService<IAppliedPosition>(connectionString, databaseName, collectionName);
+                        //});
 
+
+                        //serviceCollection.AddSingleton<IRepository,>();
+                        //serviceCollection.AddSingleton<IRepository<IAppliedPosition>, MongoDBService<IAppliedPosition>>();
+                        //serviceCollection.AddSingleton<IRepository<IAppliedPosition>, MongoDBService<IAppliedPosition>>();
+                        
                         return serviceCollection;
                 }
         }
